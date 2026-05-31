@@ -2,32 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Windows.Forms;
 using FilmReviewApp.Models;
 
 namespace FilmReviewApp.Data
 {
-    /// <summary>
-    /// Handles all database operations using SQLite and ADO.NET.
-    /// Manages movie and review data persistence.
-    /// </summary>
     public class DatabaseHelper
     {
-        #region Fields
-
         private readonly string _connectionString;
         private readonly string _databasePath;
 
-        #endregion
-
-        #region Constructor
-
-        /// <summary>
-        /// Initializes a new instance of the DatabaseHelper class.
-        /// Creates database if it doesn't exist and initializes tables.
-        /// </summary>
         public DatabaseHelper()
         {
-            // Store database in Application Data folder for proper installation practices
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string appFolder = Path.Combine(appDataPath, "FilmReviewApp");
 
@@ -42,23 +28,23 @@ namespace FilmReviewApp.Data
             InitializeDatabase();
         }
 
-        #endregion
-
-        #region Database Initialization
-
-        /// <summary>
-        /// Initializes the database by creating it if needed and ensuring all tables exist.
-        /// </summary>
         private void InitializeDatabase()
         {
             try
             {
-                if (!File.Exists(_databasePath))
+                bool isNewDatabase = !File.Exists(_databasePath);
+
+                if (isNewDatabase)
                 {
                     SQLiteConnection.CreateFile(_databasePath);
                 }
 
                 CreateTables();
+
+                if (isNewDatabase || GetMovieCount() == 0)
+                {
+                    SeedDefaultMovies();
+                }
             }
             catch (Exception ex)
             {
@@ -66,9 +52,6 @@ namespace FilmReviewApp.Data
             }
         }
 
-        /// <summary>
-        /// Creates the Films and Reviews tables if they don't exist.
-        /// </summary>
         private void CreateTables()
         {
             try
@@ -77,7 +60,6 @@ namespace FilmReviewApp.Data
                 {
                     connection.Open();
 
-                    // Create Films table
                     string createFilmsTable = @"
                         CREATE TABLE IF NOT EXISTS Films (
                             FilmID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,7 +71,6 @@ namespace FilmReviewApp.Data
                             PosterPath TEXT
                         );";
 
-                    // Create Reviews table
                     string createReviewsTable = @"
                         CREATE TABLE IF NOT EXISTS Reviews (
                             ReviewID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,20 +98,84 @@ namespace FilmReviewApp.Data
             }
         }
 
-        #endregion
+        private int GetMovieCount()
+        {
+            try
+            {
+                using (SQLiteConnection connection = new SQLiteConnection(_connectionString))
+                {
+                    connection.Open();
+                    string query = "SELECT COUNT(*) FROM Films;";
+                    using (SQLiteCommand command = new SQLiteCommand(query, connection))
+                    {
+                        return Convert.ToInt32(command.ExecuteScalar());
+                    }
+                }
+            }
+            catch
+            {
+                return 0;
+            }
+        }
 
-        #region Movie Operations
+        private void SeedDefaultMovies()
+        {
+            try
+            {
+                string assetsPath = Path.Combine(Application.StartupPath, "Assets");
 
-        /// <summary>
-        /// Inserts a new movie into the database.
-        /// </summary>
-        /// <param name="title">The movie title.</param>
-        /// <param name="genre">The movie genre.</param>
-        /// <param name="director">The movie director.</param>
-        /// <param name="releaseYear">The release year.</param>
-        /// <param name="description">The movie description.</param>
-        /// <param name="posterPath">The path to the poster image.</param>
-        /// <returns>The ID of the inserted movie.</returns>
+                var defaultMovies = new[]
+                {
+                    new { Title = "Inception", Genre = "Bilim Kurgu", Director = "Christopher Nolan", Year = 2010, Description = "Rüya hırsızı Dom Cobb, kurbanlarının bilinçaltına girerek sırlarını çalar. Ancak bu sefer görevi fikir çalmak değil, bir fikir yerleştirmektir. Inception, zihin bükücü bir bilim kurgu başyapıtıdır.", Poster = "inception.jpg.jpg" },
+                    new { Title = "Interstellar", Genre = "Bilim Kurgu", Director = "Christopher Nolan", Year = 2014, Description = "Dünya artık yaşanılmaz hale gelirken, bir grup kaşif insanlık için yeni bir yuva bulmak üzere bir solucan deliğinden geçerek uzayın derinliklerine yolculuk yapar. Epik bir uzay macerası.", Poster = "interstellar.jpg.jpg" },
+                    new { Title = "The Matrix", Genre = "Aksiyon", Director = "Lana Wachowski, Lilly Wachowski", Year = 1999, Description = "Neo, gerçekliğin aslında makineler tarafından yaratılmış bir simülasyon olduğunu keşfeder. İnsanlığı kurtarmak için Matrix'e karşı savaşmaya başlar. Devrim yaratan bir bilim kurgu aksiyon filmi.", Poster = "matrix.jpg.jpg" },
+                    new { Title = "Titanic", Genre = "Romantik", Director = "James Cameron", Year = 1997, Description = "1912'de batan efsanevi Titanic gemisinde, farklı sınıflardan iki genç arasında büyüyen tutkulu bir aşk hikayesi. Jack ve Rose'un unutulmaz aşkı, tarihin en büyük deniz felaketinin ortasında.", Poster = "titanic.jpg.jpg" },
+                    new { Title = "Avatar", Genre = "Bilim Kurgu", Director = "James Cameron", Year = 2009, Description = "Eski denizci Jake Sully, Pandora gezegeninde Na'vi ırkıyla bağ kurar. İnsanlığın kaynakları sömürme planına karşı durarak, iki dünya arasında bir seçim yapmak zorunda kalır.", Poster = "avatar.jpg.jpg" }
+                };
+
+                foreach (var movie in defaultMovies)
+                {
+                    string posterPath = Path.Combine(assetsPath, movie.Poster);
+                    InsertMovie(movie.Title, movie.Genre, movie.Director, movie.Year, movie.Description, posterPath);
+                }
+
+                SeedDefaultReviews();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error seeding default movies: {ex.Message}");
+            }
+        }
+
+        private void SeedDefaultReviews()
+        {
+            try
+            {
+                InsertReview(1, "Ahmet", 5, "Nolan'ın en iyi filmlerinden biri. Rüya içinde rüya konsepti muhteşem işlenmiş. Kesinlikle tekrar tekrar izlenmeli!");
+                InsertReview(1, "Elif", 4, "Görsel efektler ve senaryo harika. Sadece bazı sahneler biraz karmaşık olabiliyor ama genel olarak çok başarılı.");
+                InsertReview(1, "Mehmet", 5, "Zihin bükücü bir başyapıt! Hans Zimmer'in müzikleri de filmi ayrı bir seviyeye taşıyor.");
+
+                InsertReview(2, "Zeynep", 5, "Hayatımda izlediğim en etkileyici film. Cooper ve Murph arasındaki baba-kız ilişkisi göz yaşartıcı.");
+                InsertReview(2, "Can", 4, "Bilimsel detaylar çok iyi araştırılmış. Kara delik sahnesi tek başına filmi izlemeye değer kılıyor.");
+                InsertReview(2, "Ayşe", 5, "Uzay sahneleri nefes kesici. Finali ise tamamen duygusal bir yıkım. Masterpiece!");
+
+                InsertReview(3, "Burak", 5, "Sinema tarihini değiştiren bir film. Bullet-time efekti devrim niteliğinde. Neo efsanedir!");
+                InsertReview(3, "Selin", 4, "Felsefe ve aksiyon mükemmel harmanlanmış. 'Gerçeklik nedir?' sorusunu sormadan edemiyorsunuz.");
+
+                InsertReview(4, "Deniz", 5, "Her izlediğimde ağlıyorum. Jack ve Rose'un aşkı zamansız. James Cameron harika iş çıkarmış.");
+                InsertReview(4, "Merve", 4, "Görsel olarak muhteşem bir yapım. Geminin batma sahneleri çok gerçekçi. Klasikler arasında hak ettiği yerde.");
+                InsertReview(4, "Ali", 3, "Güzel bir film ama biraz uzun buldum. Yine de romantik film sevenlere kesinlikle tavsiye ederim.");
+
+                InsertReview(5, "Emre", 4, "Pandora gezegeni inanılmaz detaylı tasarlanmış. 3D deneyimi sinema tarihinde bir dönüm noktası.");
+                InsertReview(5, "Fatma", 5, "Görsel bir şölen! Na'vi kültürü ve doğayla bağ kurma teması çok güzel işlenmiş.");
+                InsertReview(5, "Kaan", 4, "Hikaye biraz tahmin edilebilir olsa da görsel efektler ve dünya yaratımı eşsiz. İkinci filmi de harika.");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error seeding default reviews: {ex.Message}");
+            }
+        }
+
         public int InsertMovie(string title, string genre, string director, int releaseYear, string description, string posterPath)
         {
             try
@@ -146,7 +191,6 @@ namespace FilmReviewApp.Data
 
                     using (SQLiteCommand command = new SQLiteCommand(query, connection))
                     {
-                        // Use parameterized queries to prevent SQL injection
                         command.Parameters.AddWithValue("@title", title ?? string.Empty);
                         command.Parameters.AddWithValue("@genre", genre ?? string.Empty);
                         command.Parameters.AddWithValue("@director", director ?? string.Empty);
@@ -165,16 +209,6 @@ namespace FilmReviewApp.Data
             }
         }
 
-        /// <summary>
-        /// Updates an existing movie in the database.
-        /// </summary>
-        /// <param name="filmID">The ID of the movie to update.</param>
-        /// <param name="title">The new title.</param>
-        /// <param name="genre">The new genre.</param>
-        /// <param name="director">The new director.</param>
-        /// <param name="releaseYear">The new release year.</param>
-        /// <param name="description">The new description.</param>
-        /// <param name="posterPath">The new poster path.</param>
         public void UpdateMovie(int filmID, string title, string genre, string director, int releaseYear, string description, string posterPath)
         {
             try
@@ -209,10 +243,6 @@ namespace FilmReviewApp.Data
             }
         }
 
-        /// <summary>
-        /// Deletes a movie and all its associated reviews from the database.
-        /// </summary>
-        /// <param name="filmID">The ID of the movie to delete.</param>
         public void DeleteMovie(int filmID)
         {
             try
@@ -221,7 +251,6 @@ namespace FilmReviewApp.Data
                 {
                     connection.Open();
 
-                    // Delete reviews first (cascade is set but explicit deletion is safer)
                     string deleteReviewsQuery = "DELETE FROM Reviews WHERE FilmID = @filmID;";
                     string deleteMovieQuery = "DELETE FROM Films WHERE FilmID = @filmID;";
 
@@ -244,10 +273,6 @@ namespace FilmReviewApp.Data
             }
         }
 
-        /// <summary>
-        /// Retrieves all movies from the database.
-        /// </summary>
-        /// <returns>A list of all movies.</returns>
         public List<Movie> GetAllMovies()
         {
             List<Movie> movies = new List<Movie>();
@@ -288,11 +313,6 @@ namespace FilmReviewApp.Data
             return movies;
         }
 
-        /// <summary>
-        /// Retrieves a specific movie by ID.
-        /// </summary>
-        /// <param name="filmID">The ID of the movie to retrieve.</param>
-        /// <returns>The movie object, or null if not found.</returns>
         public Movie GetMovieById(int filmID)
         {
             try
@@ -333,12 +353,6 @@ namespace FilmReviewApp.Data
             return null;
         }
 
-        /// <summary>
-        /// Retrieves all movies filtered by search term and genre.
-        /// </summary>
-        /// <param name="searchTerm">The search term (searches in title and genre).</param>
-        /// <param name="genre">The genre filter (empty string for no filter).</param>
-        /// <returns>A filtered list of movies.</returns>
         public List<Movie> SearchMovies(string searchTerm, string genre = "")
         {
             List<Movie> movies = new List<Movie>();
@@ -354,7 +368,7 @@ namespace FilmReviewApp.Data
                         FROM Films 
                         WHERE (Title LIKE @searchTerm OR Genre LIKE @searchTerm)";
 
-                    if (!string.IsNullOrEmpty(genre) && genre != "All")
+                    if (!string.IsNullOrEmpty(genre) && genre != "All" && genre != "Tümü")
                     {
                         query += " AND Genre = @genre";
                     }
@@ -364,7 +378,7 @@ namespace FilmReviewApp.Data
                     using (SQLiteCommand command = new SQLiteCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@searchTerm", $"%{searchTerm}%");
-                        if (!string.IsNullOrEmpty(genre) && genre != "All")
+                        if (!string.IsNullOrEmpty(genre) && genre != "All" && genre != "Tümü")
                         {
                             command.Parameters.AddWithValue("@genre", genre);
                         }
@@ -395,10 +409,6 @@ namespace FilmReviewApp.Data
             return movies;
         }
 
-        /// <summary>
-        /// Gets all distinct genres from the database.
-        /// </summary>
-        /// <returns>A list of unique genres.</returns>
         public List<string> GetAllGenres()
         {
             List<string> genres = new List<string>();
@@ -431,23 +441,10 @@ namespace FilmReviewApp.Data
             return genres;
         }
 
-        #endregion
-
-        #region Review Operations
-
-        /// <summary>
-        /// Inserts a new review into the database.
-        /// </summary>
-        /// <param name="filmID">The ID of the film being reviewed.</param>
-        /// <param name="userName">The name of the reviewer.</param>
-        /// <param name="rating">The rating (1-5).</param>
-        /// <param name="comment">The review comment.</param>
-        /// <returns>The ID of the inserted review.</returns>
         public int InsertReview(int filmID, string userName, int rating, string comment)
         {
             try
             {
-                // Validate rating
                 if (rating < 1 || rating > 5)
                 {
                     throw new ArgumentException("Rating must be between 1 and 5.");
@@ -480,11 +477,6 @@ namespace FilmReviewApp.Data
             }
         }
 
-        /// <summary>
-        /// Retrieves all reviews for a specific movie.
-        /// </summary>
-        /// <param name="filmID">The ID of the film.</param>
-        /// <returns>A list of reviews for the movie.</returns>
         public List<Review> GetReviewsByFilmId(int filmID)
         {
             List<Review> reviews = new List<Review>();
@@ -530,11 +522,6 @@ namespace FilmReviewApp.Data
             return reviews;
         }
 
-        /// <summary>
-        /// Calculates the average rating for a movie.
-        /// </summary>
-        /// <param name="filmID">The ID of the film.</param>
-        /// <returns>The average rating (0-5), or 0 if no reviews exist.</returns>
         public double GetAverageRating(int filmID)
         {
             try
@@ -566,11 +553,6 @@ namespace FilmReviewApp.Data
             }
         }
 
-        /// <summary>
-        /// Gets the count of reviews for a movie.
-        /// </summary>
-        /// <param name="filmID">The ID of the film.</param>
-        /// <returns>The number of reviews for the movie.</returns>
         public int GetReviewCount(int filmID)
         {
             try
@@ -595,7 +577,5 @@ namespace FilmReviewApp.Data
                 throw new Exception($"Error counting reviews: {ex.Message}", ex);
             }
         }
-
-        #endregion
     }
 }

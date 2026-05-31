@@ -1,27 +1,36 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FilmReviewApp.Forms;
 
 namespace FilmReviewApp
 {
-    /// <summary>
-    /// Entry point for the Film Review application.
-    /// Initializes and runs the main form.
-    /// </summary>
     internal static class Program
     {
-        /// <summary>
-        /// Main entry point for the application.
-        /// </summary>
         [STAThread]
         static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+
+            bool keepRunning = true;
+            while (keepRunning)
+            {
+                LoginForm loginForm = new LoginForm();
+                DialogResult result = loginForm.ShowDialog();
+
+                if (result == DialogResult.OK && loginForm.LoginSuccessful)
+                {
+                    Form1 mainForm = new Form1(loginForm.IsAdmin);
+                    Application.Run(mainForm);
+                }
+                else
+                {
+                    keepRunning = false;
+                }
+            }
         }
     }
 }
-

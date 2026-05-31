@@ -8,42 +8,24 @@ using FilmReviewApp.Models;
 
 namespace FilmReviewApp.Forms
 {
-    /// <summary>
-    /// Form for displaying movie details and managing reviews.
-    /// Shows movie information and allows users to submit and view reviews.
-    /// </summary>
     public partial class MovieDetailForm : Form
     {
-        #region Fields
-
         private int _movieId;
         private DatabaseHelper _databaseHelper;
         private Movie _currentMovie;
+        private bool _isAdmin;
 
-        #endregion
-
-        #region Constructor
-
-        /// <summary>
-        /// Initializes a new instance of the MovieDetailForm for a specific movie.
-        /// </summary>
-        /// <param name="movieId">The ID of the movie to display.</param>
-        public MovieDetailForm(int movieId)
+        public MovieDetailForm(int movieId, bool isAdmin)
         {
             InitializeComponent();
             _movieId = movieId;
+            _isAdmin = isAdmin;
             _databaseHelper = new DatabaseHelper();
             SetupDesign();
+            ApplyRolePermissions();
             LoadMovieData();
         }
 
-        #endregion
-
-        #region Initialization
-
-        /// <summary>
-        /// Sets up the visual design of the form using the dark theme.
-        /// </summary>
         private void SetupDesign()
         {
             BackColor = Color.FromArgb(30, 30, 30);
@@ -51,11 +33,9 @@ namespace FilmReviewApp.Forms
             StartPosition = FormStartPosition.CenterParent;
             Size = new Size(800, 900);
 
-            // Enable AutoScroll for scrollbar functionality
             AutoScroll = true;
             AutoScrollMargin = new Size(0, 10);
 
-            // Configure labels for movie details
             ConfigureLabel(labelTitle);
             ConfigureLabel(labelGenre);
             ConfigureLabel(labelDirector);
@@ -63,48 +43,36 @@ namespace FilmReviewApp.Forms
             ConfigureLabel(labelDescription);
             ConfigureLabel(labelAverageRating);
 
-            // Configure review section labels
             ConfigureLabel(labelUserName);
             ConfigureLabel(labelRating);
             ConfigureLabel(labelComment);
             ConfigureLabel(labelReviews);
 
-            // Configure text boxes
             ConfigureTextBox(textBoxUserName);
             ConfigureTextBox(richTextBoxComment);
 
-            // Configure numeric up down
             numericUpDownRating.BackColor = Color.FromArgb(40, 40, 40);
             numericUpDownRating.ForeColor = Color.White;
             numericUpDownRating.Minimum = 1;
             numericUpDownRating.Maximum = 5;
             numericUpDownRating.Value = 5;
 
-            // Configure buttons
             ConfigureButton(btnSubmitReview);
             ConfigureButton(btnClose);
 
-            // Configure DataGridView
             ConfigureDataGridView();
 
-            // Configure picture box
             pictureBoxPoster.BackColor = Color.FromArgb(40, 40, 40);
             pictureBoxPoster.BorderStyle = BorderStyle.FixedSingle;
             pictureBoxPoster.SizeMode = PictureBoxSizeMode.Zoom;
         }
 
-        /// <summary>
-        /// Configures a label with the dark theme.
-        /// </summary>
         private void ConfigureLabel(Label label)
         {
             label.ForeColor = Color.White;
             label.BackColor = Color.FromArgb(30, 30, 30);
         }
 
-        /// <summary>
-        /// Configures a text box with the dark theme.
-        /// </summary>
         private void ConfigureTextBox(Control textBox)
         {
             textBox.BackColor = Color.FromArgb(40, 40, 40);
@@ -115,9 +83,6 @@ namespace FilmReviewApp.Forms
                 rtb.BorderStyle = BorderStyle.FixedSingle;
         }
 
-        /// <summary>
-        /// Configures a button with the dark theme.
-        /// </summary>
         private void ConfigureButton(Button button)
         {
             button.BackColor = Color.FromArgb(220, 20, 60);
@@ -128,9 +93,6 @@ namespace FilmReviewApp.Forms
             button.Cursor = Cursors.Hand;
         }
 
-        /// <summary>
-        /// Configures the DataGridView for displaying reviews.
-        /// </summary>
         private void ConfigureDataGridView()
         {
             dataGridViewReviews.BackgroundColor = Color.FromArgb(40, 40, 40);
@@ -147,13 +109,32 @@ namespace FilmReviewApp.Forms
             dataGridViewReviews.AllowUserToResizeRows = false;
         }
 
-        #endregion
+        private void ApplyRolePermissions()
+        {
+            if (_isAdmin)
+            {
+                btnDelete.Visible = true;
+                labelUserName.Visible = false;
+                textBoxUserName.Visible = false;
+                labelRating.Visible = false;
+                numericUpDownRating.Visible = false;
+                labelComment.Visible = false;
+                richTextBoxComment.Visible = false;
+                btnSubmitReview.Visible = false;
+            }
+            else
+            {
+                btnDelete.Visible = false;
+                labelUserName.Visible = true;
+                textBoxUserName.Visible = true;
+                labelRating.Visible = true;
+                numericUpDownRating.Visible = true;
+                labelComment.Visible = true;
+                richTextBoxComment.Visible = true;
+                btnSubmitReview.Visible = true;
+            }
+        }
 
-        #region Data Loading
-
-        /// <summary>
-        /// Loads the movie data from the database and displays it.
-        /// </summary>
         private void LoadMovieData()
         {
             try
@@ -166,7 +147,6 @@ namespace FilmReviewApp.Forms
                     return;
                 }
 
-                // Display movie details
                 Text = _currentMovie.Title;
                 labelTitle.Text = _currentMovie.Title;
                 labelGenre.Text = $"Tür: {_currentMovie.Genre}";
@@ -174,18 +154,15 @@ namespace FilmReviewApp.Forms
                 labelReleaseYear.Text = $"Yayın Yılı: {_currentMovie.ReleaseYear}";
                 labelDescription.Text = $"Açıklama:\n\n{_currentMovie.Description}";
 
-                // Load poster
                 if (!string.IsNullOrEmpty(_currentMovie.PosterPath) && File.Exists(_currentMovie.PosterPath))
                 {
                     pictureBoxPoster.Image = Image.FromFile(_currentMovie.PosterPath);
                 }
 
-                // Display average rating
                 double averageRating = _databaseHelper.GetAverageRating(_movieId);
                 int reviewCount = _databaseHelper.GetReviewCount(_movieId);
                 DisplayRating(averageRating, reviewCount);
 
-                // Load reviews
                 LoadReviews();
             }
             catch (Exception ex)
@@ -194,9 +171,6 @@ namespace FilmReviewApp.Forms
             }
         }
 
-        /// <summary>
-        /// Displays the average rating with stars.
-        /// </summary>
         private void DisplayRating(double averageRating, int reviewCount)
         {
             int fullStars = (int)averageRating;
@@ -212,19 +186,14 @@ namespace FilmReviewApp.Forms
             labelAverageRating.ForeColor = Color.Gold;
         }
 
-        /// <summary>
-        /// Loads and displays all reviews for the movie.
-        /// </summary>
         private void LoadReviews()
         {
             try
             {
                 List<Review> reviews = _databaseHelper.GetReviewsByFilmId(_movieId);
 
-                // Clear existing rows
                 dataGridViewReviews.Rows.Clear();
 
-                // Define columns
                 if (dataGridViewReviews.Columns.Count == 0)
                 {
                     dataGridViewReviews.Columns.Add("UserName", "Kullanıcı");
@@ -238,7 +207,6 @@ namespace FilmReviewApp.Forms
                     dataGridViewReviews.Columns[3].Width = 120;
                 }
 
-                // Add review data
                 foreach (var review in reviews)
                 {
                     int rowIndex = dataGridViewReviews.Rows.Add();
@@ -249,7 +217,6 @@ namespace FilmReviewApp.Forms
                     row.Cells[2].Value = review.Comment;
                     row.Cells[3].Value = review.ReviewDate.ToString("yyyy-MM-dd HH:mm");
 
-                    // Highlight high ratings in gold
                     if (review.Rating >= 4)
                     {
                         row.Cells[1].Style.ForeColor = Color.Gold;
@@ -262,13 +229,6 @@ namespace FilmReviewApp.Forms
             }
         }
 
-        #endregion
-
-        #region Form Controls Creation
-
-        /// <summary>
-        /// Creates all form controls at runtime.
-        /// </summary>
         private void InitializeComponent()
         {
             labelTitle = new Label();
@@ -297,12 +257,10 @@ namespace FilmReviewApp.Forms
             ((System.ComponentModel.ISupportInitialize)(dataGridViewReviews)).BeginInit();
             SuspendLayout();
 
-            // Picture Box
             pictureBoxPoster.Location = new Point(12, 12);
             pictureBoxPoster.Size = new Size(200, 300);
             pictureBoxPoster.TabIndex = 0;
 
-            // Movie Details
             labelTitle.AutoSize = true;
             labelTitle.Font = new Font("Segoe UI", 16, FontStyle.Bold);
             labelTitle.Location = new Point(220, 12);
@@ -336,7 +294,6 @@ namespace FilmReviewApp.Forms
             labelDescription.TabIndex = 6;
             labelDescription.TextAlign = ContentAlignment.TopLeft;
 
-            // Review Section
             labelUserName.AutoSize = true;
             labelUserName.Location = new Point(12, 410);
             labelUserName.Text = "Adınız:";
@@ -370,7 +327,6 @@ namespace FilmReviewApp.Forms
             btnSubmitReview.Text = "Gönder";
             btnSubmitReview.Click += BtnSubmitReview_Click;
 
-            // Reviews Grid
             labelReviews.AutoSize = true;
             labelReviews.Font = new Font("Segoe UI", 12, FontStyle.Bold);
             labelReviews.Location = new Point(12, 565);
@@ -385,7 +341,6 @@ namespace FilmReviewApp.Forms
             dataGridViewReviews.Size = new Size(760, 250);
             dataGridViewReviews.TabIndex = 15;
 
-            // Delete Button
             btnDelete = new Button();
             btnDelete.Location = new Point(12, 850);
             btnDelete.Size = new Size(102, 35);
@@ -398,14 +353,12 @@ namespace FilmReviewApp.Forms
             btnDelete.Cursor = Cursors.Hand;
             btnDelete.Click += BtnDelete_Click;
 
-            // Close Button
             btnClose.Location = new Point(670, 850);
             btnClose.Size = new Size(102, 35);
             btnClose.TabIndex = 16;
             btnClose.Text = "Kapat";
             btnClose.Click += BtnClose_Click;
 
-            // MovieDetailForm
             AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 897);
@@ -435,19 +388,10 @@ namespace FilmReviewApp.Forms
             PerformLayout();
         }
 
-        #endregion
-
-        #region Event Handlers
-
-        /// <summary>
-        /// Handles the Submit Review button click event.
-        /// Validates input and saves the review to the database.
-        /// </summary>
         private void BtnSubmitReview_Click(object sender, EventArgs e)
         {
             try
             {
-                // Validate input
                 if (string.IsNullOrWhiteSpace(textBoxUserName.Text))
                 {
                     MessageBox.Show("Lütfen adınızı girin.", "Doğrulama Hatası", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -464,20 +408,16 @@ namespace FilmReviewApp.Forms
                 int rating = (int)numericUpDownRating.Value;
                 string comment = richTextBoxComment.Text.Trim();
 
-                // Insert review
                 _databaseHelper.InsertReview(_movieId, userName, rating, comment);
 
                 MessageBox.Show("Yorum başarıyla gönderildi!", "Başarı", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Clear form
                 textBoxUserName.Clear();
                 richTextBoxComment.Clear();
                 numericUpDownRating.Value = 5;
 
-                // Reload reviews
                 LoadReviews();
 
-                // Update average rating
                 double averageRating = _databaseHelper.GetAverageRating(_movieId);
                 int reviewCount = _databaseHelper.GetReviewCount(_movieId);
                 DisplayRating(averageRating, reviewCount);
@@ -488,23 +428,15 @@ namespace FilmReviewApp.Forms
             }
         }
 
-        /// <summary>
-        /// Handles the Close button click event.
-        /// </summary>
         private void BtnClose_Click(object sender, EventArgs e)
         {
             Close();
         }
 
-        /// <summary>
-        /// Handles the Delete Movie button click event.
-        /// Deletes the movie and all associated reviews after confirmation.
-        /// </summary>
         private void BtnDelete_Click(object sender, EventArgs e)
         {
             try
             {
-                // Confirmation dialog
                 DialogResult result = MessageBox.Show(
                     $"'{_currentMovie.Title}' filmini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz ve tüm yorumlar silinecektir.",
                     "Silmeyi Onayla",
@@ -516,12 +448,10 @@ namespace FilmReviewApp.Forms
                     return;
                 }
 
-                // Delete the movie
                 _databaseHelper.DeleteMovie(_movieId);
 
                 MessageBox.Show("Film başarıyla silindi!", "Başarı", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Close the form and notify parent
                 DialogResult = DialogResult.OK;
                 Close();
             }
@@ -530,10 +460,6 @@ namespace FilmReviewApp.Forms
                 MessageBox.Show($"Film silinirken hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        #endregion
-
-        #region Designer Fields
 
         private Label labelTitle;
         private Label labelGenre;
@@ -555,7 +481,5 @@ namespace FilmReviewApp.Forms
         private DataGridView dataGridViewReviews;
         private Button btnDelete;
         private Button btnClose;
-
-        #endregion
     }
 }

@@ -1,50 +1,73 @@
-# Film Review App - Windows Forms Application
+# 🎬 Film Değerlendirme Uygulaması
 
-## Overview
+**Film Değerlendirme Uygulaması**, C# Windows Forms (.NET Framework 4.7.2) ile geliştirilmiş, modern ve dinamik arayüze sahip kapsamlı bir film inceleme, oylama ve yönetim sistemidir. Güçlü bir SQLite veritabanı altyapısı üzerine kurulu olan uygulama, tamamen özelleştirilmiş **Dark Theme (Koyu Tema)** tasarımıyla modern dijital platformların (Netflix/IMDb) kullanıcı deneyimini masaüstüne taşır.
 
-Film Review App is a comprehensive Movie Review and Rating System built with C# Windows Forms (.NET Framework 4.7.2). It combines a Netflix/IMDb-style user interface with a robust SQLite database backend using ADO.NET for data operations.
+---
 
-The application allows users to:
-- Browse and discover movies
-- Search and filter movies by genre
-- Add new movies with poster images
-- Rate and review movies
-- View movie details and all reviews
-- Sort movies by rating and newest additions
+## 🌟 Öne Çıkan Özellikler
 
-## Architecture
+*   **Çift Rol Desteği (Role-Based Access Control):** Gelişmiş güvenlik ve yetkilendirme modeli. Admin ve normal kullanıcılar için dinamik olarak değişen arayüz.
+*   **Koyu Tema ve Modern Arayüz:** `#1E1E1E` (Derin Koyu Gri), `#DC143C` (Kızıl Kırmızı), `#FFD700` (Puanlama Altını) renk paletiyle göz yormayan, üst segment Premium tasarım.
+*   **Gelişmiş Giriş Ekranı (LoginForm):** Giriş yöntemini seçme paneli, Admin doğrulama ekranı, geri butonu ve altında şifre ipucu desteği.
+*   **Merkezi Oturum Yönetimi:** Formların sağ üst köşesinde konumlandırılmış hızlı "Çıkış ✕" butonu ile güvenli çıkış ve giriş ekranına yönlendirme.
+*   **Gerçek Zamanlı Filtreleme:** Arama çubuğu ile isme göre anında filtreleme ve film türüne (Genre) göre akıllı sınıflandırma.
+*   **Akıllı Sıralama:** Filmleri "En Yüksek Puan" veya "En Yeni Eklenenler" kriterlerine göre tek tıkla listeleme.
+*   **Dinamik Değerlendirme Sistemi:** Kullanıcı adı, 1-5 yıldızlı puanlama sistemi ve geniş yorum alanı ile filmlere inceleme ekleme.
+*   **Otomatik Veritabanı ve Hazır Veriler (Database Seeding):** İlk kurulumda otomatik veritabanı oluşturma ve kullanıcının uygulamayı anında deneyimleyebilmesi için hazır gelen **5 popüler film ve bunlara ait hazır yorumlar**.
 
-### Project Structure
+---
 
-```
+## 🔑 Kullanıcı Rolleri ve Yetkileri
+
+Uygulama başlatıldığında modern bir giriş ekranı (`LoginForm`) açılır. Kullanıcılar buradan iki rolden biriyle devam edebilirler:
+
+| Yetki / Özellik | 👤 Kullanıcı Modu (Şifresiz Giriş) | 🔐 Admin Modu (admin / admin123) |
+| :--- | :---: | :---: |
+| **Giriş Şekli** | Doğrudan tek tıkla giriş yapılabilir | Kullanıcı adı ve Şifre doğrulaması gerektirir |
+| **Film Listeleme & Arama** | ✅ Aktif | ✅ Aktif |
+| **Detay & Yorum İnceleme** | ✅ Aktif | ✅ Aktif |
+| **Yorum Ekleme & Puanlama** | ✅ Aktif | ❌ Engelli (Yorum paneli gizlenir) |
+| **Film Ekleme (Add Movie)** | ❌ Engelli (Ekleme butonu gizlenir) | ✅ Aktif |
+| **Film Silme (Delete Movie)** | ❌ Engelli (Silme butonu gizlenir) | ✅ Aktif (Detay sayfasında görünür) |
+
+> [!TIP]
+> **Admin Giriş Bilgileri:** Giriş ekranında admin butonunun hemen altında ipucu olarak gösterilmektedir.
+> *   **Kullanıcı Adı:** `admin`
+> *   **Şifre:** `admin123`
+
+---
+
+## 📂 Proje Mimarisi ve Klasör Yapısı
+
+Proje, katmanlı mimariye (MVC esintili) uygun şekilde organize edilmiştir:
+
+```text
 FilmReviewApp/
-├── Data/
-│   └── DatabaseHelper.cs          # SQLite database operations
-├── Models/
-│   ├── Movie.cs                    # Movie entity model
-│   └── Review.cs                   # Review entity model
-├── Forms/
-│   ├── AddMovieForm.cs             # Add/Edit movie form
-│   └── MovieDetailForm.cs          # Movie details and reviews form
+├── Configuration/            # Uygulama genel ayarları ve yapılandırmalar
 ├── Controls/
-│   └── MovieCard.cs                # Reusable movie card user control
-├── Form1.cs                         # Main application form
-├── Program.cs                       # Application entry point
-└── FilmReviewApp.csproj            # Project file
+│   └── MovieCard.cs          # Ana sayfada filmleri listeleyen şık özel kart bileşeni
+├── Data/
+│   └── DatabaseHelper.cs     # SQLite CRUD işlemleri ve veritabanı yönetim sınıfı
+├── Forms/
+│   ├── AddMovieForm.cs       # Film ekleme/düzenleme modal arayüzü
+│   ├── LoginForm.cs          # Kullanıcı türü seçimi ve Admin doğrulama arayüzü
+│   └── MovieDetailForm.cs    # Detay görüntüleme, yorum yazma ve silme arayüzü
+├── Models/
+│   ├── Movie.cs              # Film veri modeli
+│   └── Review.cs             # Yorum ve puanlama veri modeli
+├── Utilities/                # Yardımcı araçlar ve UI renklendirme sınıfları
+├── Form1.cs                  # Ana ekran formu (Film Galerisi ve filtreleme paneli)
+├── Program.cs                # Uygulama başlangıç noktası (Giriş kontrolü)
+└── FilmReviewApp.csproj      # .NET MSBuild proje dosyası
 ```
 
-### Technology Stack
+---
 
-- **Framework**: .NET Framework 4.7.2
-- **UI Framework**: Windows Forms (WinForms)
-- **Database**: SQLite 3
-- **Data Access**: ADO.NET with parameterized queries
-- **Language**: C# 7.3
-- **Design Pattern**: MVC-inspired separation of concerns
+## 💾 Veritabanı ve Şema Yapısı
 
-## Database Schema
+Uygulama, yerel bir **SQLite 3** veritabanı dosyası kullanır. Tablolar ilişkisel veri yapısına göre tasarlanmıştır ve film silindiğinde ilişkili tüm yorumlar otomatik olarak silinir (`ON DELETE CASCADE`).
 
-### Films Table
+### 1. Films (Film Bilgileri)
 ```sql
 CREATE TABLE Films (
     FilmID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +80,7 @@ CREATE TABLE Films (
 );
 ```
 
-### Reviews Table
+### 2. Reviews (Kullanıcı Değerlendirmeleri)
 ```sql
 CREATE TABLE Reviews (
     ReviewID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,293 +93,69 @@ CREATE TABLE Reviews (
 );
 ```
 
-## Features
+---
 
-### 1. Main Form (Form1)
-- **Movie Gallery**: Displays movies in an aesthetically pleasing card layout
-- **Real-time Search**: Filter movies instantly by title and genre
-- **Genre Filter**: ComboBox to filter movies by selected genre
-- **Sorting Options**:
-  - Sort by Highest Rating (descending)
-  - Sort by Newest (by insertion order)
-- **Add Movie Button**: Quick access to add new movies
-- **Dark Theme UI**: Modern Netflix/IMDb-style interface
+## 🚀 Başlangıç ve Hazır Veriler (Data Seeding)
 
-**Key Controls**:
-- Search TextBox: Real-time filtering
-- Genre ComboBox: Genre-based filtering
-- FlowLayoutPanel: Dynamic movie card display
-- Sorting Buttons: Rating and date sorting
+Uygulama başka bir cihazda veya yeni bir dizinde ilk kez çalıştırıldığında, veritabanı otomatik olarak oluşturulur ve **SeedDefaultMovies** mekanizması devreye girer. Bu mekanizma şu verileri yükler:
 
-### 2. Add Movie Form
-- **Form Type**: Modal dialog for adding or editing movies
-- **Fields**:
-  - Movie Title (required)
-  - Genre
-  - Director
-  - Release Year (NumericUpDown 1900-current year + 10)
-  - Description (multi-line text)
-  - Poster Image (with file dialog selection)
-- **Image Preview**: Shows selected poster before saving
-- **Edit Mode**: Automatically loads existing movie data when editing
-- **Validation**: Ensures required fields are filled
+### 🎬 Hazır Yüklenen Filmler
+1.  **Inception** (Bilim Kurgu - Yönetmen: Christopher Nolan - 2010)
+2.  **Interstellar** (Bilim Kurgu - Yönetmen: Christopher Nolan - 2014)
+3.  **The Matrix** (Aksiyon - Yönetmen: Wachowski Kardeşler - 1999)
+4.  **Titanic** (Romantik - Yönetmen: James Cameron - 1997)
+5.  **Avatar** (Bilim Kurgu - Yönetmen: James Cameron - 2009)
 
-### 3. Movie Detail Form
-- **Movie Information Display**:
-  - Large poster image
-  - Title, Genre, Director, Release Year
-  - Full description
-  - Average rating with star display
-  - Review count
-
-- **Review Submission**:
-  - User Name field
-  - Rating (1-5 NumericUpDown)
-  - Comment (RichTextBox for multi-line text)
-  - Submit button with validation
-
-- **Reviews Display**:
-  - DataGridView showing all reviews
-  - Columns: User, Rating, Review, Date
-  - Sorted by newest first
-  - Color-coded ratings (high ratings in gold)
-
-### 4. Database Helper Class (DatabaseHelper.cs)
-Comprehensive database operations using ADO.NET:
-
-**Movie Operations**:
-- `InsertMovie()`: Add new movie to database
-- `UpdateMovie()`: Modify existing movie
-- `DeleteMovie()`: Remove movie and associated reviews
-- `GetAllMovies()`: Retrieve all movies
-- `GetMovieById()`: Get specific movie details
-- `SearchMovies()`: Search by title/genre with filtering
-- `GetAllGenres()`: Get unique genres
-
-**Review Operations**:
-- `InsertReview()`: Add new review
-- `GetReviewsByFilmId()`: Retrieve all reviews for a movie
-- `GetAverageRating()`: Calculate average rating
-- `GetReviewCount()`: Count reviews for a movie
-
-**Database Management**:
-- `InitializeDatabase()`: Create database if needed
-- `CreateTables()`: Create schema if tables don't exist
-
-### 5. MovieCard UserControl
-Reusable movie card component with:
-- **Properties**: MovieId, Title, Genre, Rating, PosterPath
-- **Display**: Poster image, title, genre, star rating
-- **Interaction**: Details button triggers event
-- **Styling**: Dark theme card with hover effects
-
-## Design Principles
-
-### 1. Clean Code
-- Comprehensive XML documentation for all public members
-- Logical code organization with regions
-- Meaningful variable and method names
-- DRY (Don't Repeat Yourself) principle
-
-### 2. Security
-- **Parameterized Queries**: All SQL queries use parameters to prevent SQL injection
-- **Input Validation**: User input validated before database operations
-- **Exception Handling**: Try-catch blocks with informative error messages
-
-### 3. User Interface
-- **Dark Theme**: Color scheme matching modern applications
-  - Background: `#1E1E1E` (Dark Gray)
-  - Accents: `#DC143C` (Crimson Red)
-  - Gold: `#FFD700` (for ratings)
-  - Text: `#FFFFFF` (White)
-
-- **Responsive Design**: Adaptive layout that works with different screen sizes
-- **Visual Feedback**: Hover effects, color highlighting, clear button states
-
-### 4. Data Access Pattern
-- **DatabaseHelper Singleton Pattern**: Centralized database access
-- **Connection Management**: Proper disposal of connections and commands
-- **Error Handling**: Detailed exception messages for debugging
-
-## Usage Guide
-
-### Running the Application
-
-1. **Build and Run**:
-   - Open the project in Visual Studio
-   - Build the solution (Debug or Release)
-   - Run the application (F5)
-
-2. **First Launch**:
-   - Application automatically creates the database
-   - Database stored in: `%APPDATA%\FilmReviewApp\films.db`
-   - Empty movie list is shown
-
-### Adding a Movie
-
-1. Click "+ Add New Movie" button
-2. Fill in movie details:
-   - Title (required)
-   - Genre
-   - Director
-   - Release Year
-   - Description
-3. Click "Select Poster" to choose an image (JPG, PNG, BMP)
-4. Click "Save Movie"
-5. New movie appears in the gallery
-
-### Searching and Filtering
-
-1. **Search**: Type in the search box to filter by title or genre
-2. **Genre Filter**: Select a genre from the dropdown (All shows all movies)
-3. **Sorting**:
-   - Click "⭐ Highest Rating" to sort by average rating
-   - Click "🆕 Newest" to sort by most recently added
-
-### Viewing Movie Details
-
-1. Click "View Details" on any movie card
-2. View movie information and all reviews
-3. Submit a new review:
-   - Enter your name
-   - Select rating (1-5)
-   - Write your comment
-   - Click "Submit Review"
-4. New review appears in the DataGridView
-
-### Editing/Deleting Movies
-
-Future enhancement: Edit and delete functionality can be added to:
-- Right-click context menu on movie cards
-- Edit button in movie details form
-- Delete with confirmation dialog
-
-## Code Examples
-
-### Searching Movies
-
-```csharp
-List<Movie> filteredMovies = _databaseHelper.SearchMovies("Avatar", "Sci-Fi");
-```
-
-### Adding a Review
-
-```csharp
-int reviewId = _databaseHelper.InsertReview(
-    filmID: 1,
-    userName: "John Doe",
-    rating: 5,
-    comment: "Amazing movie!"
-);
-```
-
-### Getting Average Rating
-
-```csharp
-double avgRating = _databaseHelper.GetAverageRating(filmID: 1);
-```
-
-### Creating a New Movie
-
-```csharp
-int movieId = _databaseHelper.InsertMovie(
-    title: "Inception",
-    genre: "Sci-Fi",
-    director: "Christopher Nolan",
-    releaseYear: 2010,
-    description: "A skilled thief...",
-    posterPath: "C:\\posters\\inception.jpg"
-);
-```
-
-## Error Handling
-
-The application includes comprehensive error handling:
-
-1. **Try-Catch Blocks**: All database operations and file operations
-2. **User Feedback**: MessageBox dialogs inform users of success/errors
-3. **Logging**: System.Diagnostics.Debug for development logging
-4. **Validation**: Input validation before database operations
-
-## Performance Considerations
-
-1. **Parameterized Queries**: Prevents SQL injection and improves performance
-2. **Lazy Loading**: Reviews loaded on demand when viewing movie details
-3. **Caching**: Movie list cached to reduce database queries during filtering
-4. **Efficient Sorting**: Sorting done in-memory after retrieving filtered results
-
-## Future Enhancements
-
-1. **Edit/Delete Movie**: Add functionality to modify or remove movies
-2. **User Authentication**: Implement user login system
-3. **Favorites System**: Allow users to save favorite movies
-4. **Advanced Ratings**: Display distribution of ratings
-5. **Movie Recommendations**: Suggest movies based on ratings
-6. **Export/Import**: Backup and restore movie data
-7. **Review Moderation**: Admin panel for managing reviews
-8. **Multi-language Support**: Localization for different languages
-9. **Movie Suggestions**: Integration with external APIs (OMDB, TMDB)
-10. **Responsive Web Version**: Migrate to ASP.NET for web access
-
-## Dependencies
-
-- **System.Data.SQLite**: NuGet package for SQLite database support
-- **.NET Framework 4.7.2**: Base framework requirement
-- **Windows Forms**: Built-in .NET Framework feature
-
-## Database Location
-
-The SQLite database is stored at:
-```
-%APPDATA%\FilmReviewApp\films.db
-```
-
-On Windows, this typically expands to:
-```
-C:\Users\[Username]\AppData\Roaming\FilmReviewApp\films.db
-```
-
-## Code Quality Standards
-
-### Comments and Documentation
-- XML documentation on all public classes and methods
-- Inline comments for complex logic
-- Region markers for logical code organization
-
-### Naming Conventions
-- PascalCase for classes, methods, properties
-- camelCase for local variables and parameters
-- `_underscore` prefix for private fields
-- Descriptive names that convey intent
-
-### Exception Handling
-- Specific exception types caught when possible
-- Meaningful error messages with context
-- User-friendly error dialogs
-
-### Input Validation
-- Required fields checked before processing
-- String length validation
-- Numeric range validation
-- File path existence validation
-
-## Testing Recommendations
-
-1. **Unit Tests**: Test DatabaseHelper methods independently
-2. **Integration Tests**: Test database operations with actual SQLite
-3. **UI Tests**: Manual testing of form interactions
-4. **Edge Cases**: Test with empty databases, invalid inputs, corrupted images
-
-## License
-
-This application is provided as-is for educational and commercial use.
-
-## Support
-
-For issues, questions, or contributions, refer to the code documentation and comments throughout the application.
+### 💬 Hazır Yüklenen Örnek Yorumlar
+Her filme ait, farklı puanlara (1-5 arası) sahip hazır Türkçe kullanıcı yorumları eklenir. Böylece uygulama ilk açıldığı andan itibaren canlı ve zengin görünür, boş bir ekranla karşılaşılmaz.
 
 ---
 
-**Application Version**: 1.0.0  
-**Last Updated**: 2024  
-**Target Framework**: .NET Framework 4.7.2
+## 🛠️ Kullanım Kılavuzu
+
+### 1. Kurulum ve Çalıştırma
+1.  Projeyi **Visual Studio** (tercihen 2019 veya üzeri) ile açın.
+2.  NuGet Paket Yöneticisi üzerinden `System.Data.SQLite` paketinin yüklü olduğundan emin olun.
+3.  Projeyi derleyin (Build) ve başlatın (F5).
+
+### 2. Kullanıcı Girişi Yapma
+1.  Karşınıza gelen ekrandan **"👤 Kullanıcı Olarak Devam Et"** butonuna basarak doğrudan ana paneli açabilirsiniz.
+2.  Yorumları okuyabilir, arama çubuğundan film filtreleyebilir ve filmlere tıklayarak kendi yorumlarınızı yazabilirsiniz.
+3.  Sağ üst köşedeki **"Çıkış ✕"** butonuna tıklayarak tekrar rol seçme ekranına dönebilirsiniz.
+
+### 3. Yönetici (Admin) Girişi Yapma
+1.  Ana ekrandan **"🔐 Admin Girişi"** butonuna basın.
+2.  Açılan alanda kullanıcı adı olarak `admin`, şifre olarak `admin123` yazıp giriş yapın.
+3.  Başarılı giriş sonrasında ana ekranda yeşil renkli **"+ Yeni Film Ekle"** butonu aktif olacaktır.
+4.  Film detay formlarında ise **"Filmi Sil"** seçeneği aktif duruma gelir.
+
+### 4. Yeni Film Ekleme (Yalnızca Admin)
+1.  **"+ Yeni Film Ekle"** butonuna tıklayın.
+2.  Açılan pencerede Film Adı, Tür, Yönetmen, Çıkış Yılı ve Açıklama bilgilerini girin.
+3.  **"Afiş Seç"** butonuna tıklayarak bilgisayarınızdan görsel (JPG, PNG vb.) ekleyin.
+4.  **"Filmi Kaydet"** butonuna tıklayın. Film anında ana ekranda kart olarak listelenecektir.
+
+---
+
+## 💎 Kod Kalitesi ve Tasarım Prensipleri
+
+*   **Güvenlik (SQL Injection Koruması):** Veritabanı sorgularının tamamında dinamik metin birleştirme yerine **Parametreli Sorgular (Parameterized Queries)** kullanılarak tam koruma sağlanmıştır.
+*   **Temiz ve Yorum Satırsız Kod (Clean Code):** Geliştirme sonrasında kod kalitesini artırmak ve gereksiz kalabalığı önlemek amacıyla, tüm geçici geliştirici yorum satırları kod tabanından temizlenmiştir.
+*   **Performans & Hızlı Yanıt:** Arama ve sıralama işlemleri bellek (in-memory) üzerinde filtreleme ile anlık gerçekleşir. Detay sayfasındaki yorum listesi `DataGridView` ile performanslı bir şekilde veritabanından çekilir.
+*   **Hata Yönetimi (Robust Exception Handling):** Tüm dosya ve SQLite bağlantı işlemlerinde gelişmiş `try-catch` blokları kullanılarak olası çalışma zamanı hataları kontrol altına alınmış ve kullanıcı dostu mesajlar verilmiştir.
+
+---
+
+## 💾 Yerel Veritabanı Dosya Yolu
+
+SQLite veritabanı dosyanız (`films.db`) Windows üzerinde aşağıdaki dizinde güvenli bir şekilde saklanır:
+```text
+%APPDATA%\FilmReviewApp\films.db
+```
+*(Bu yol sisteminizde `C:\Users\<Kullanıcı_Adınız>\AppData\Roaming\FilmReviewApp\films.db` şeklindedir)*
+
+---
+
+**Uygulama Sürümü:** 1.0.0  
+**Geliştirme Platformu:** .NET Framework 4.7.2 (C#)  
+**Tasarım Dili:** Premium Dark Theme (C# WinForms Custom Render)
